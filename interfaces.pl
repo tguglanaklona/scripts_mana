@@ -1,8 +1,10 @@
 #!/usr/bin/perl
 use strict;
 
-my $originalfile = 'start-nat-full.sh.bak';#readonly
-my $filename = 'start-nat-full.sh';
+my $originalfile = '/usr/share/mana-toolkit/run-mana/start-nat-full.sh.bak';#readonly
+my $filename = '/usr/share/mana-toolkit/run-mana/start-nat-full.sh';
+my $settingsoriginalfile = '/etc/mana-toolkit/hostapd-karma.conf.bak';#readonly
+my $settingsfilename = '/etc/mana-toolkit/hostapd-karma.conf';
 
 my $upstream = 'wlan0';#eth0 # == @ARGV[0]
 my $phy = 'wlan1';           # == @ARGV[1]
@@ -10,6 +12,7 @@ my $phy = 'wlan1';           # == @ARGV[1]
 
 my $nstr_upstream_const = 2;
 my $nstr_phy_const = 3;
+my $nstr_interface_const = 0;
 
 if (@ARGV){
   if (@ARGV[0] ne ""){ $upstream = @ARGV[0]; }
@@ -19,19 +22,36 @@ if (@ARGV){
     or die "Could not open file '$filename' $!";
   open(my $rh, '+<:encoding(UTF-8)', $originalfile)
     or die "Could not open file '$originalfile' $!";
+
+  open(my $sfh, '>:encoding(UTF-8)', $settingsfilename)
+    or die "Could not open file '$settingsfilename' $!";
+  open(my $srh, '+<:encoding(UTF-8)', $settingsoriginalfile)
+    or die "Could not open file '$settingsoriginalfile' $!";
   
-  my $k = 0; print "changed values:\n";
-  while (my $row = <$rh>) {
+  my $k = 0; my $row = 0;
+  print "changed values:\n";
+  while ($row = <$rh>) {
     if ($k==$nstr_upstream_const){
       print 'upstream='.$upstream."\n"; #verbose
-      if (@ARGV){ print $fh 'upstream='.$upstream."\n"; }
+      { print $fh 'upstream='.$upstream."\n"; }
     }
     elsif ($k==$nstr_phy_const){
       print 'phy='.$phy."\n"; #verbose
-      if (@ARGV){ print $fh 'phy='.$phy."\n"; }
+      { print $fh 'phy='.$phy."\n"; }
     }
     else{
-      if (@ARGV){ print $fh $row; }
+      { print $fh $row; }
+    }
+    $k = $k+1;
+  }
+  $k = 0; $row = 0;
+  while ($row = <$srh>) {
+    if ($k==$nstr_interface_const){
+      print 'interface='.$phy."\n"; #verbose
+      { print $sfh 'interface='.$phy."\n"; }
+    }
+    else{
+      { print $sfh $row; }
     }
     $k = $k+1;
   }
@@ -39,9 +59,12 @@ if (@ARGV){
 else{ #read current
   open(my $fh, '+<:encoding(UTF-8)', $filename)
     or die "Could not open file '$filename' $!";
-  
-  my $k = 0; print "current values:\n";
-  while (my $row = <$fh>) {
+  open(my $sfh, '+<:encoding(UTF-8)', $settingsfilename)
+    or die "Could not open file '$settingsfilename' $!";
+
+  my $k = 0; my $row = 0; 
+  print "current values:\n";
+  while ($row = <$fh>) {
     if ($k==$nstr_upstream_const){
       print $row;
     }
@@ -49,6 +72,14 @@ else{ #read current
       print $row;
     }
     else{
+    }
+    $k = $k+1;
+  }
+  $k = 0; $row = 0;
+  while ($row = <$sfh>){
+    if ($k==$nstr_interface_const){
+      print $row;
+      last;
     }
     $k = $k+1;
   }
