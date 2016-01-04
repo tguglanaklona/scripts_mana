@@ -43,10 +43,10 @@ else{ #read current
   my $k = 0; print "current values:\n";
   while (my $row = <$fh>) {
     if ($k==$nstr_upstream_const){
-      print 'upstream='.$upstream."\n";
+      print $row;
     }
     elsif ($k==$nstr_phy_const){
-      print 'phy='.$phy."\n";
+      print $row;
     }
     else{
     }
